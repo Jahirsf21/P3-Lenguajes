@@ -59,3 +59,17 @@ mover_hacia(LugarDestino) :-
         )
     ;   write("No hay una conexion directa entre "), write(LugarActual), write(" y "), write(LugarDestino), fail
     ).
+
+objetos_requeridos(Lugar, Objetos) :-
+    findall(Objeto, requiere(Objeto,Lugar), Objetos).
+
+verificar_objetos_en_inventario([]) :- !.
+verificar_objetos_en_inventario(Objetos) :- 
+    inventario(Inv),
+    forall(member(Objeto, Objetos), member(Objeto, Inv)).
+
+verificar_objetos_en_inventario_y_usados([]) :- !.
+verificar_objetos_en_inventario_y_usados(Objetos) :- 
+    inventario(Inv),
+    objetos_usados(Usados),
+    forall(member(Objeto, Objetos), (member(Objeto, Inv), member(Objeto,Usados))).
