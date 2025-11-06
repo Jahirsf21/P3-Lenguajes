@@ -73,3 +73,6 @@ verificar_objetos_en_inventario_y_usados(Objetos) :-
     inventario(Inv),
     objetos_usados(Usados),
     forall(member(Objeto, Objetos), (member(Objeto, Inv), member(Objeto,Usados))).
+
+tomar_objeto(Objeto) :- jugador(Lugar), objeto(Objeto, Lugar), inventario(Inv), \+ member(Objeto, Inv), retract(inventario(Inv)), assertz(inventario([Objeto|Inv])).
+usar_objeto(Objeto) :- inventario(Inv), member(Objeto, Inv), objetos_usados(Usados), \+ member(Objeto, Usados), retract(objetos_usados(Usados)), assertz(objetos_usados([Objeto|Usados])).
