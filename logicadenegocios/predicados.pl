@@ -76,3 +76,16 @@ verificar_objetos_en_inventario_y_usados(Objetos) :-
 
 tomar_objeto(Objeto) :- jugador(Lugar), objeto(Objeto, Lugar), inventario(Inv), \+ member(Objeto, Inv), retract(inventario(Inv)), assertz(inventario([Objeto|Inv])).
 usar_objeto(Objeto) :- inventario(Inv), member(Objeto, Inv), objetos_usados(Usados), \+ member(Objeto, Usados), retract(objetos_usados(Usados)), assertz(objetos_usados([Objeto|Usados])).
+
+ruta_directa(Origen, Destino) :-
+    (   conectado(Origen, Destino)
+    ;   conectado(Destino, Origen)
+    ;   conexion(Origen, Destino, _)
+    ;   conexion(Destino, Origen, _)
+    ).
+
+actualizar_camino_realizado(Lugar) :- 
+    camino_realizado(CaminoActual), 
+    append(CaminoActual, [Lugar], CaminoActualizado),
+    retractall(camino_realizado(_)),
+    assertz(camino_realizado(CaminoActualizado)).
