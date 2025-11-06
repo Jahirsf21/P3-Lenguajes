@@ -23,3 +23,13 @@ que_tengo :-
     ;   writeln("Inventario:"),
         mostrar_objetos(Inv)
     ).
+
+mostrar_lugares([]).
+mostrar_lugares([Lugar|Resto]) :-
+    write("- "), writeln(Lugar),
+    mostrar_lugares(Resto).
+
+mostrar_objetos([]).
+mostrar_objetos([Objeto|Resto]) :-
+    write("- "), writeln(Objeto),
+    mostrar_objetos(Resto).
