@@ -89,3 +89,21 @@ actualizar_camino_realizado(Lugar) :-
     append(CaminoActual, [Lugar], CaminoActualizado),
     retractall(camino_realizado(_)),
     assertz(camino_realizado(CaminoActualizado)).
+
+donde_estoy :-
+    jugador(Lugar),
+    lugar(Lugar, Descripcion),
+    write("Estas en: "), writeln(Lugar),
+    write("Descripcion: "), writeln(Descripcion),
+    write("Objetos aqui: "),
+    findall(Obj, objeto(Obj, Lugar), Objetos),
+    (   Objetos = []
+    ->  writeln("ninguno")
+    ;   mostrar_objetos(Objetos)
+    ).
+
+lugares_conectados :-
+    jugador(LugarActual),
+    write("Desde "), write(LugarActual), writeln(" puedes ir a:"),
+    findall(Destino, (ruta_directa(LugarActual, Destino), Destino \= LugarActual), Destinos),
+    mostrar_lugares(Destinos).
