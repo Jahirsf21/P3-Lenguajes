@@ -15,7 +15,6 @@ donde_esta_objeto(Objeto) :- findall(Lugar, objeto(Objeto, Lugar), Lugares),
     ).
     
 
-
 que_tengo :-
     inventario(Inv),
     (   Inv = []
@@ -33,3 +32,30 @@ mostrar_objetos([]).
 mostrar_objetos([Objeto|Resto]) :-
     write("- "), writeln(Objeto),
     mostrar_objetos(Resto).
+
+puedo_ir(LugarDestino) :-
+    jugador(LugarActual),
+    (   ruta_directa(LugarActual, LugarDestino)
+    ->  objetos_requeridos(LugarDestino, ObjetosRequeridos),
+        (   verificar_objetos_en_inventario(ObjetosRequeridos)
+        ->  true
+        ;   write("No puedes ir a "), write(LugarDestino), write("; te faltan los objetos requeridos."), fail
+        )
+    ;   write("No hay una conexion directa entre "), write(LugarActual), write(" y "), write(LugarDestino), fail
+    ).
+
+mover_hacia(LugarDestino) :-
+    jugador(LugarActual),
+    (   ruta_directa(LugarActual, LugarDestino)
+    ->  objetos_requeridos(LugarDestino, ObjetosRequeridos),
+        (   verificar_objetos_en_inventario_y_usados(ObjetosRequeridos)
+        ->  retractall(jugador(_)),
+            assertz(jugador(LugarDestino)),
+            actualizar_camino_realizado(LugarDestino),
+            write("Te has movido de "), write(LugarActual), write(" a "), write(LugarDestino), nl,
+            verificar_tesoro(LugarDestino)
+        ;   write("No puedes ir a "), write(LugarDestino), write("; te faltan los objetos requeridos o no los has usado."), nl,
+            fail
+        )
+    ;   write("No hay una conexion directa entre "), write(LugarActual), write(" y "), write(LugarDestino), fail
+    ).
