@@ -7,31 +7,32 @@
 :- dynamic inventario/1.
 :- dynamic objetos_usados/1.
 
-donde_esta_objeto(Objeto) :- findall(Lugar, objeto(Objeto, Lugar), Lugares), 
-    (   Lugares = []
-    ->  write("El objeto "), write(Objeto), write(" no se encuentra en ningun lugar.")
-    ;   write("El objeto "), write(Objeto), write(" se encuentra en: "),
-        mostrar_lugares(Lugares)
+ruta_directa(Origen, Destino) :-
+    (   conectado(Origen, Destino)
+    ;   conectado(Destino, Origen)
+    ;   conexion(Origen, Destino, _)
+    ;   conexion(Destino, Origen, _)
     ).
-    
 
-que_tengo :-
+objetos_requeridos(Lugar, Objetos) :-
+    findall(Objeto, requiere(Objeto, Lugar), Objetos).
+
+verificar_objetos_en_inventario([]) :- !.
+verificar_objetos_en_inventario(Objetos) :-
     inventario(Inv),
-    (   Inv = []
-    ->  writeln("El inventario esta vacio")
-    ;   writeln("Inventario:"),
-        mostrar_objetos(Inv)
-    ).
+    forall(member(Objeto, Objetos), member(Objeto, Inv)).
 
-mostrar_lugares([]).
-mostrar_lugares([Lugar|Resto]) :-
-    write("- "), writeln(Lugar),
-    mostrar_lugares(Resto).
+verificar_objetos_en_inventario_y_usados([]) :- !.
+verificar_objetos_en_inventario_y_usados(Objetos) :-
+    inventario(Inv),
+    objetos_usados(Usados),
+    forall(member(Objeto, Objetos), (member(Objeto, Inv), member(Objeto, Usados))).
 
-mostrar_objetos([]).
-mostrar_objetos([Objeto|Resto]) :-
-    write("- "), writeln(Objeto),
-    mostrar_objetos(Resto).
+actualizar_camino_realizado(Lugar) :-
+    camino_realizado(CaminoActual),
+    append(CaminoActual, [Lugar], CaminoActualizado),
+    retractall(camino_realizado(_)),
+    assertz(camino_realizado(CaminoActualizado)).
 
 puedo_ir(LugarDestino) :-
     jugador(LugarActual),
@@ -60,35 +61,34 @@ mover_hacia(LugarDestino) :-
     ;   write("No hay una conexion directa entre "), write(LugarActual), write(" y "), write(LugarDestino), fail
     ).
 
-objetos_requeridos(Lugar, Objetos) :-
-    findall(Objeto, requiere(Objeto,Lugar), Objetos).
-
-verificar_objetos_en_inventario([]) :- !.
-verificar_objetos_en_inventario(Objetos) :- 
-    inventario(Inv),
-    forall(member(Objeto, Objetos), member(Objeto, Inv)).
-
-verificar_objetos_en_inventario_y_usados([]) :- !.
-verificar_objetos_en_inventario_y_usados(Objetos) :- 
-    inventario(Inv),
-    objetos_usados(Usados),
-    forall(member(Objeto, Objetos), (member(Objeto, Inv), member(Objeto,Usados))).
-
 tomar_objeto(Objeto) :- jugador(Lugar), objeto(Objeto, Lugar), inventario(Inv), \+ member(Objeto, Inv), retract(inventario(Inv)), assertz(inventario([Objeto|Inv])).
+
 usar_objeto(Objeto) :- inventario(Inv), member(Objeto, Inv), objetos_usados(Usados), \+ member(Objeto, Usados), retract(objetos_usados(Usados)), assertz(objetos_usados([Objeto|Usados])).
 
-ruta_directa(Origen, Destino) :-
-    (   conectado(Origen, Destino)
-    ;   conectado(Destino, Origen)
-    ;   conexion(Origen, Destino, _)
-    ;   conexion(Destino, Origen, _)
+que_tengo :-
+    inventario(Inv),
+    (   Inv = []
+    ->  writeln("El inventario esta vacio")
+    ;   writeln("Inventario:"),
+        mostrar_objetos(Inv)
     ).
 
-actualizar_camino_realizado(Lugar) :- 
-    camino_realizado(CaminoActual), 
-    append(CaminoActual, [Lugar], CaminoActualizado),
-    retractall(camino_realizado(_)),
-    assertz(camino_realizado(CaminoActualizado)).
+mostrar_objetos([]).
+mostrar_objetos([Objeto|Resto]) :-
+    write("- "), writeln(Objeto),
+    mostrar_objetos(Resto).
+
+donde_esta_objeto(Objeto) :- findall(Lugar, objeto(Objeto, Lugar), Lugares),
+    (   Lugares = []
+    ->  write("El objeto "), write(Objeto), write(" no se encuentra en ningun lugar.")
+    ;   write("El objeto "), write(Objeto), write(" se encuentra en: "),
+        mostrar_lugares(Lugares)
+    ).
+
+mostrar_lugares([]).
+mostrar_lugares([Lugar|Resto]) :-
+    write("- "), writeln(Lugar),
+    mostrar_lugares(Resto).
 
 donde_estoy :-
     jugador(Lugar),
@@ -107,3 +107,49 @@ lugares_conectados :-
     write("Desde "), write(LugarActual), writeln(" puedes ir a:"),
     findall(Destino, (ruta_directa(LugarActual, Destino), Destino \= LugarActual), Destinos),
     mostrar_lugares(Destinos).
+
+lugar_visitados :-
+    camino_realizado(Camino),
+    (   Camino = []
+    ->  writeln("Aun no has visitado ningún lugar.")
+    ;   writeln("Lugares visitados:"),
+        mostrar_lugares(Camino)
+    ).
+
+ruta(Inicio, Fin, Camino) :-
+    ruta_buscar(Inicio, Fin, [Inicio], CaminoInvertido),
+    reverse(CaminoInvertido, Camino).
+
+ruta_buscar(Fin, Fin, Visitados, Visitados).
+ruta_buscar(Actual, Fin, Visitados, Camino) :-
+    ruta_directa(Actual, Siguiente),
+    \+ member(Siguiente, Visitados),
+    ruta_buscar(Siguiente, Fin, [Siguiente|Visitados], Camino).
+
+movimientos_validos([_]).
+movimientos_validos([Actual, Siguiente|Resto]) :-
+    ruta_directa(Actual, Siguiente),
+    objetos_requeridos(Siguiente, Objetos),
+    verificar_objetos_en_inventario(Objetos),
+    movimientos_validos([Siguiente|Resto]).
+
+ruta(Inicio, LugarFinal, Objeto, Camino) :-
+    inventario(Inv),
+    tesoro(LugarFinal, Objeto),
+    member(Objeto, Inv),
+    ruta(Inicio, LugarFinal, Camino),
+    movimientos_validos(Camino).
+
+como_gano :-
+    jugador(Inicio),
+    findall(ruta(LugarFinal, Objeto, Camino),
+            ruta(Inicio, LugarFinal, Objeto, Camino),
+            Rutas),
+    (   Rutas = []
+    ->  writeln("No existen rutas de gane con el inventario actual."),
+        fail
+    ;   writeln("Rutas posibles para ganar:"),
+        mostrar_rutas_gane(Rutas)
+    ).
+
+
