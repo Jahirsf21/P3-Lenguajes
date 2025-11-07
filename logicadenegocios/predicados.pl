@@ -153,3 +153,42 @@ como_gano :-
     ).
 
 
+
+mostrar_rutas_gane([]).
+mostrar_rutas_gane([ruta(LugarFinal, Objeto, Camino)|Resto]) :-
+    write('Destino: '), writeln(LugarFinal),
+    write('Objeto requerido: '), writeln(Objeto),
+    writeln('Camino sugerido:'),
+    mostrar_lugares(Camino),
+    writeln(''),
+    mostrar_rutas_gane(Resto).
+
+verifica_gane :-
+    jugador(LugarActual),
+    inventario(Inv),
+    findall(condicion(LugarActual, Objeto),
+            (tesoro(LugarActual, Objeto), member(Objeto, Inv)),
+            Condiciones),
+    (   Condiciones = []
+    ->  writeln("Aun no cumples ninguna condicion de gane."),
+        fail
+    ;   writeln("¡Has ganado!"),
+        writeln("Camino realizado:"),
+        camino_realizado(Camino),
+        (   Camino = []
+        ->  writeln("- (sin movimientos registrados)")
+        ;   mostrar_lugares(Camino)
+        ),
+        writeln("Inventario actual:"),
+        (   Inv = []
+        ->  writeln("- (sin objetos)")
+        ;   mostrar_objetos(Inv)
+        ),
+        mostrar_condiciones_gane(Condiciones)
+    ).
+
+mostrar_condiciones_gane([]).
+mostrar_condiciones_gane([condicion(Lugar, Objeto)|Resto]) :-
+    write('Condición cumplida: objeto '), write(Objeto),
+    write(' en '), writeln(Lugar),
+    mostrar_condiciones_gane(Resto).
