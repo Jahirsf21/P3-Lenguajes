@@ -36,59 +36,35 @@ actualizar_camino_realizado(Lugar) :-
 
 puedo_ir(LugarDestino) :-
     jugador(LugarActual),
-    (   ruta_directa(LugarActual, LugarDestino)
-    ->  objetos_requeridos(LugarDestino, ObjetosRequeridos),
-        (   verificar_objetos_en_inventario(ObjetosRequeridos)
-        ->  true
-        ;   write("No puedes ir a "), write(LugarDestino), write("; te faltan los objetos requeridos."), fail
-        )
-    ;   write("No hay una conexion directa entre "), write(LugarActual), write(" y "), write(LugarDestino), fail
-    ).
+    ruta_directa(LugarActual, LugarDestino),
+    objetos_requeridos(LugarDestino, ObjetosRequeridos),
+    verificar_objetos_en_inventario(ObjetosRequeridos).
 
-mover_hacia(LugarDestino) :-
+mover(LugarDestino) :-
     jugador(LugarActual),
-    (   ruta_directa(LugarActual, LugarDestino)
-    ->  objetos_requeridos(LugarDestino, ObjetosRequeridos),
-        (   verificar_objetos_en_inventario_y_usados(ObjetosRequeridos)
-        ->  retractall(jugador(_)),
-            assertz(jugador(LugarDestino)),
-            actualizar_camino_realizado(LugarDestino),
-            write("Te has movido de "), write(LugarActual), write(" a "), write(LugarDestino), nl,
-            verificar_tesoro(LugarDestino)
-        ;   write("No puedes ir a "), write(LugarDestino), write("; te faltan los objetos requeridos o no los has usado."), nl,
-            fail
-        )
-    ;   write("No hay una conexion directa entre "), write(LugarActual), write(" y "), write(LugarDestino), fail
-    ).
+    ruta_directa(LugarActual, LugarDestino),
+    objetos_requeridos(LugarDestino, ObjetosRequeridos),
+    verificar_objetos_en_inventario_y_usados(ObjetosRequeridos),
+    retractall(jugador(_)),
+    write("UI2 "),
+    assertz(jugador(LugarDestino)),
+    actualizar_camino_realizado(LugarDestino).
 
-tomar_objeto(Objeto) :- jugador(Lugar), objeto(Objeto, Lugar), inventario(Inv), \+ member(Objeto, Inv), retract(inventario(Inv)), assertz(inventario([Objeto|Inv])).
 
-usar_objeto(Objeto) :- inventario(Inv), member(Objeto, Inv), objetos_usados(Usados), \+ member(Objeto, Usados), retract(objetos_usados(Usados)), assertz(objetos_usados([Objeto|Usados])).
+tomar(Objeto) :- jugador(Lugar), objeto(Objeto, Lugar), inventario(Inv), \+ member(Objeto, Inv), retract(inventario(Inv)), assertz(inventario([Objeto|Inv])).
 
-que_tengo :-
-    inventario(Inv),
-    (   Inv = []
-    ->  writeln("El inventario esta vacio")
-    ;   writeln("Inventario:"),
-        mostrar_objetos(Inv)
-    ).
+usar(Objeto) :- inventario(Inv), member(Objeto, Inv), objetos_usados(Usados), \+ member(Objeto, Usados), retract(objetos_usados(Usados)), assertz(objetos_usados([Objeto|Usados])).
 
-mostrar_objetos([]).
-mostrar_objetos([Objeto|Resto]) :-
-    write("- "), writeln(Objeto),
-    mostrar_objetos(Resto).
+que_tengo(X) :-
+    inventario(X).
 
-donde_esta_objeto(Objeto) :- findall(Lugar, objeto(Objeto, Lugar), Lugares),
+donde_esta(Objeto, X) :-
+    findall(Lugar, objeto(Objeto, Lugar), Lugares),
     (   Lugares = []
-    ->  write("El objeto "), write(Objeto), write(" no se encuentra en ningun lugar.")
-    ;   write("El objeto "), write(Objeto), write(" se encuentra en: "),
-        mostrar_lugares(Lugares)
+    ->  X = []
+    ;   X = Lugares
     ).
 
-mostrar_lugares([]).
-mostrar_lugares([Lugar|Resto]) :-
-    write("- "), writeln(Lugar),
-    mostrar_lugares(Resto).
 
 donde_estoy :-
     jugador(Lugar),
@@ -108,13 +84,8 @@ lugares_conectados :-
     findall(Destino, (ruta_directa(LugarActual, Destino), Destino \= LugarActual), Destinos),
     mostrar_lugares(Destinos).
 
-lugar_visitados :-
-    camino_realizado(Camino),
-    (   Camino = []
-    ->  writeln("Aun no has visitado ningún lugar.")
-    ;   writeln("Lugares visitados:"),
-        mostrar_lugares(Camino)
-    ).
+lugar_visitados(X) :-
+    camino_realizado(X).
 
 ruta(Inicio, Fin, Camino) :-
     ruta_buscar(Inicio, Fin, [Inicio], CaminoInvertido),
@@ -140,17 +111,24 @@ ruta(Inicio, LugarFinal, Objeto, Camino) :-
     ruta(Inicio, LugarFinal, Camino),
     movimientos_validos(Camino).
 
-como_gano :-
+como_gano(X) :-
     jugador(Inicio),
-    findall(ruta(LugarFinal, Objeto, Camino),
-            ruta(Inicio, LugarFinal, Objeto, Camino),
-            Rutas),
+    findall(
+        ruta(LugarFinal, Objeto, Camino),
+        ruta(Inicio, LugarFinal, Objeto, Camino),
+        Rutas
+    ),
     (   Rutas = []
-    ->  writeln("No existen rutas de gane con el inventario actual."),
-        fail
-    ;   writeln("Rutas posibles para ganar:"),
-        mostrar_rutas_gane(Rutas)
+    ->  X = []
+    ;   convertir_rutas(Rutas, X)
     ).
+
+convertir_rutas([], []).
+convertir_rutas([ruta(LugarFinal, Objeto, Camino)|Resto], 
+                [[LugarFinal, Objeto, Camino]|Xs]) :-
+    convertir_rutas(Resto, Xs).
+
+
 
 
 
@@ -163,32 +141,12 @@ mostrar_rutas_gane([ruta(LugarFinal, Objeto, Camino)|Resto]) :-
     writeln(''),
     mostrar_rutas_gane(Resto).
 
-verifica_gane :-
+verifica_gane(X) :-
     jugador(LugarActual),
     inventario(Inv),
-    findall(condicion(LugarActual, Objeto),
-            (tesoro(LugarActual, Objeto), member(Objeto, Inv)),
-            Condiciones),
+    findall(Objeto, (tesoro(LugarActual, Objeto), member(Objeto, Inv)), Condiciones),
+    camino_realizado(Camino),
     (   Condiciones = []
-    ->  writeln("Aun no cumples ninguna condicion de gane."),
-        fail
-    ;   writeln("¡Has ganado!"),
-        writeln("Camino realizado:"),
-        camino_realizado(Camino),
-        (   Camino = []
-        ->  writeln("- (sin movimientos registrados)")
-        ;   mostrar_lugares(Camino)
-        ),
-        writeln("Inventario actual:"),
-        (   Inv = []
-        ->  writeln("- (sin objetos)")
-        ;   mostrar_objetos(Inv)
-        ),
-        mostrar_condiciones_gane(Condiciones)
+    ->  X = []
+    ;   X = [Camino, Inv, Condiciones]
     ).
-
-mostrar_condiciones_gane([]).
-mostrar_condiciones_gane([condicion(Lugar, Objeto)|Resto]) :-
-    write('Condición cumplida: objeto '), write(Objeto),
-    write(' en '), writeln(Lugar),
-    mostrar_condiciones_gane(Resto).

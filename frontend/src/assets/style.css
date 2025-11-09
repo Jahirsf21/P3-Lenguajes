@@ -1,0 +1,17 @@
+form {
+  margin-bottom: 1em;
+}
+input {
+  padding: 0.5em;
+  margin-right: 0.5em;
+}
+button {
+  padding: 0.5em 1em;
+  margin: 0.3em;
+}
+.botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin-bottom: 1em;
+}

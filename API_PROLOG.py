@@ -23,9 +23,17 @@ except Exception as e:
 @app.route('/query', methods=['POST'])
 def query():
     try:
-        consulta = request.json['query']
+        data = request.json
+        predicado = data.get('predicado')
+        parametros = data.get('parametros', [])  
+        parametros_str = ','.join(map(str, parametros))
+        consulta = f"{predicado}({parametros_str})."
+        print(consulta)
         respuesta = list(prolog.query(consulta))
-        return jsonify(respuesta)
+        
+        if not respuesta:
+            return jsonify({'resultado': False})
+        return jsonify({'resultado': True, 'data': respuesta})
     except Exception as e:
         print(f"Error durante la ejecución de la consulta: {e}")
         return jsonify({'error': str(e)}), 400
