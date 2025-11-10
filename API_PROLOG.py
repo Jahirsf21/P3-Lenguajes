@@ -1,4 +1,5 @@
 import os
+import uuid
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 from pyswip import Prolog
@@ -7,6 +8,8 @@ app = Flask(__name__, template_folder='.')
 CORS(app)
 
 prolog = Prolog()
+
+SERVER_VERSION = str(uuid.uuid4())
 
 try:
     ruta_proyecto = os.path.abspath(os.path.dirname(__file__))
@@ -37,6 +40,12 @@ def query():
     except Exception as e:
         print(f"Error durante la ejecución de la consulta: {e}")
         return jsonify({'error': str(e)}), 400
+
+
+@app.route('/version', methods=['GET'])
+def version():
+
+    return jsonify({'version': SERVER_VERSION})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

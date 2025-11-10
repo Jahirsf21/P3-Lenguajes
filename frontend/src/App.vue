@@ -19,8 +19,42 @@ const scrollToBottom = async () => {
   resultsEndRef.value?.scrollIntoView({ behavior: "smooth" });
 };
 
-onMounted(() => {
+function saveResults() {
+  try { localStorage.setItem('results', JSON.stringify(results.value)); } catch (e) {}
+}
+
+function loadResultsFromStorage() {
   try {
+    const raw = localStorage.getItem('results');
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    results.value = parsed.map(r => ({ ...r, timestamp: r.timestamp ? new Date(r.timestamp) : new Date() }));
+  } catch (e) {
+  }
+}
+
+onMounted(async () => {
+  try {
+    try {
+      const vResp = await fetch('http://127.0.0.1:5000/version');
+      if (vResp.ok) {
+        const vJson = await vResp.json();
+        const serverVersion = vJson.version;
+        const cachedServerVersion = localStorage.getItem('serverVersion');
+        if (cachedServerVersion !== serverVersion) {
+          localStorage.removeItem('lugaresVisited');
+          localStorage.removeItem('objetosUsados');
+          localStorage.removeItem('results');
+          localStorage.setItem('serverVersion', serverVersion);
+        } else {
+          loadResultsFromStorage();
+        }
+      }
+    } catch (e) {
+      console.warn('Could not fetch server version:', e?.message || e);
+      loadResultsFromStorage();
+    }
+
     const cachedLugares = localStorage.getItem('lugaresVisited');
     if (cachedLugares) {
       lugares.value = JSON.parse(cachedLugares);
@@ -81,18 +115,39 @@ async function enviarPredicado(predicado, parametros = []) {
 
 async function actualizarLugares() {
   const data = await enviarPredicado('lugar_visitados', ['X']);
-  if (data?.data?.[0]) {
-    lugares.value = data.data[0].X || [];
+  const returned = data?.data?.[0]?.X;
+  if (returned && Array.isArray(returned) && returned.length > 0) {
+    lugares.value = returned;
     try { localStorage.setItem('lugaresVisited', JSON.stringify(lugares.value)); } catch (e) {}
+    return;
   }
+  try {
+    const cached = localStorage.getItem('lugaresVisited');
+    if (cached) {
+      lugares.value = JSON.parse(cached);
+      return;
+    }
+  } catch (e) {}
+  lugares.value = [];
 }
 
 async function actualizarObjetosUsados() {
   const data = await enviarPredicado('objetos_usados', ['X']);
-  if (data?.data?.[0]) {
-    objetosUsados.value = data.data[0].X || [];
+  const returned = data?.data?.[0]?.X;
+  if (returned && Array.isArray(returned) && returned.length > 0) {
+    objetosUsados.value = returned;
     try { localStorage.setItem('objetosUsados', JSON.stringify(objetosUsados.value)); } catch (e) {}
+    return;
   }
+  
+  try {
+    const cached = localStorage.getItem('objetosUsados');
+    if (cached) {
+      objetosUsados.value = JSON.parse(cached);
+      return;
+    }
+  } catch (e) {}
+  objetosUsados.value = [];
 }
 
 async function fetchTodosLugares() {
@@ -126,6 +181,7 @@ async function formarQuery() {
   if (data) {
     const mensaje = mostrarResultados(pred.value, data);
     results.value.push({ predicado: pred.value, mensaje, timestamp: new Date() });
+    saveResults();
     scrollToBottom();
 
     if (['mover', 'tomar', 'usar'].includes(pred.value)) {
@@ -198,6 +254,7 @@ async function enviarSinParametros(value) {
   if (data) {
     const mensaje = mostrarResultados(value, data);
     results.value.push({ predicado: value, mensaje, timestamp: new Date() });
+    saveResults();
     scrollToBottom();
   }
 }
@@ -208,7 +265,6 @@ async function enviarSinParametros(value) {
     <h1 class="title">Bienvenido a Adventure</h1>
 
     <div class="main-layout">
-      <!-- Columna Izquierda: Estado del jugador -->
       <div class="side-column">
         <div class="side-log">
           <h3 class="side-log-title">Lugares Visitados</h3>
@@ -239,7 +295,6 @@ async function enviarSinParametros(value) {
         </div>
       </div>
 
-      <!-- Columna Central: Controles y Resultados -->
       <div class="center-column">
         <div class="log-box" :class="{ 'log-loading': loading, 'log-error': error }">
           <div v-if="loading" class="loading-text">Cargando...</div>
@@ -351,7 +406,6 @@ async function enviarSinParametros(value) {
         </div>
       </div>
 
-      <!-- Columna Derecha: Información global -->
       <div class="side-column">
         <div class="side-log">
           <h3 class="side-log-title">Todos los Lugares</h3>
