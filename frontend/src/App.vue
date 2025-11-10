@@ -165,71 +165,203 @@ async function enviarSinParametros(value){
 }
 </script>
 
+
 <template>
-  <h1>Consulta Prolog</h1>
-
-
-  <div class="campos">
-    <form v-if="campoActivo === 1" @submit.prevent="formarQuery">
-      <h2>TOMAR</h2>
-      <input v-model="query" placeholder="Nombre del objeto..." />
-      <button type="submit" :disabled="loading">Enviar</button>
-    </form>
-
-    <form v-if="campoActivo === 2" @submit.prevent="formarQuery">
-      <h2>USAR</h2>
-      <input v-model="query" placeholder="Objeto a usar..." />
-      <button type="submit" :disabled="loading">Enviar</button>
-    </form>
-
-    <form v-if="campoActivo === 3" @submit.prevent="formarQuery">
-      <h2>PUEDO_IR</h2>
-      <input v-model="query" placeholder="Hacia donde..." />
-      <button type="submit" :disabled="loading">Enviar</button>
-    </form>
-
-    <form v-if="campoActivo === 4" @submit.prevent="formarQuery">
-      <h2>MOVER</h2>
-      <input v-model="query" placeholder="Destino..." />
-      <button type="submit" :disabled="loading">Enviar</button>
-    </form>
-
-    <form v-if="campoActivo === 5" @submit.prevent="formarQuery">
-      <h2>DONDE_ESTA</h2>
-      <input v-model="query" placeholder="Objeto..." />
-      <button type="submit" :disabled="loading">Enviar</button>
-    </form>
-
-
-    <form v-if="campoActivo === 8" @submit.prevent="formarQuery">
-      <h2>RUTA</h2>
-      <input v-model="query" placeholder="Origen"/>
-      <input v-model="query2" placeholder="Destino">
-      <button type="submit" :disabled="loading">Enviar</button>
-    </form>
+  <div class="adventure-container">
+    <h1 class="adventure-title">Bienvenido a Adventure</h1>
+    <div class="log-box" :class="{ 'log-loading': loading, 'log-error': error, 'log-result': result && !error }">
+      <template v-if="loading">Cargando...</template>
+      <template v-else-if="error">Error: Parametro mal introducido</template>
+      <template v-else-if="result">
+        <h2>Resultado:</h2>
+        <pre>{{ result }}</pre>
+      </template>
+      <template v-else>
+        <span>Usa los controles para jugar y ver resultados aquí.</span>
+      </template>
     </div>
-
-  <div class="botones">
-    <button @click="mostrarCampos(1, 'tomar')">TOMAR</button>
-    <button @click="mostrarCampos(2, 'usar')">USAR</button>
-    <button @click="mostrarCampos(3, 'puedo_ir')">PUEDO_IR</button>
-    <button @click="mostrarCampos(4, 'mover')">MOVER</button>
-    <button @click="mostrarCampos(5, 'donde_esta')">DONDE_ESTA</button>
-    <button @click="enviarSinParametros('que_tengo')">QUE_TENGO</button>
-    <button @click="enviarSinParametros('lugar_visitados')">LUGAR_VISITADOS</button>
-    <button @click="mostrarCampos(8, 'ruta')">RUTA</button>
-    <button @click="enviarSinParametros('como_gano')">COMO_GANO</button>
-    <button @click="enviarSinParametros('verifica_gane')">VERIFICA_GANE</button>
-  </div>
-
-  <div v-if="loading">Cargando...</div>
-  <div v-if="error" style="color: red">Error: Parametro mal introducido</div>
-  <div v-if="result && !error">
-    <h2>Resultado:</h2>
-    <pre>{{ result }}</pre>
+    <div class="input-area">
+      <form v-if="campoActivo === 1" @submit.prevent="formarQuery" class="input-form-row">
+        <input class="game-input" v-model="query" placeholder="Nombre del objeto..." />
+        <button class="game-btn input-btn" type="submit" :disabled="loading">Tomar</button>
+      </form>
+      <form v-if="campoActivo === 2" @submit.prevent="formarQuery" class="input-form-row">
+        <input class="game-input" v-model="query" placeholder="Objeto a usar..." />
+        <button class="game-btn input-btn" type="submit" :disabled="loading">Usar</button>
+      </form>
+      <form v-if="campoActivo === 3" @submit.prevent="formarQuery" class="input-form-row">
+        <input class="game-input" v-model="query" placeholder="Hacia donde..." />
+        <button class="game-btn input-btn" type="submit" :disabled="loading">Consultar</button>
+      </form>
+      <form v-if="campoActivo === 4" @submit.prevent="formarQuery" class="input-form-row">
+        <input class="game-input" v-model="query" placeholder="Destino..." />
+        <button class="game-btn input-btn" type="submit" :disabled="loading">Mover</button>
+      </form>
+      <form v-if="campoActivo === 5" @submit.prevent="formarQuery" class="input-form-row">
+        <input class="game-input" v-model="query" placeholder="Objeto..." />
+        <button class="game-btn input-btn" type="submit" :disabled="loading">Consultar</button>
+      </form>
+      <form v-if="campoActivo === 8" @submit.prevent="formarQuery" class="input-form-row">
+        <input class="game-input" v-model="query" placeholder="Origen"/>
+        <input class="game-input" v-model="query2" placeholder="Destino">
+        <button class="game-btn input-btn" type="submit" :disabled="loading">Consultar ruta</button>
+      </form>
+    </div>
+    <div class="botones-grid">
+      <button class="game-btn" @click="mostrarCampos(1, 'tomar')">Tomar objeto</button>
+      <button class="game-btn" @click="mostrarCampos(2, 'usar')">Usar objeto</button>
+      <button class="game-btn" @click="enviarSinParametros('que_tengo')">Inventario</button>
+      <button class="game-btn" @click="mostrarCampos(5, 'donde_esta')">¿Dónde está?</button>
+      <button class="game-btn" @click="mostrarCampos(3, 'puedo_ir')">¿Puedo ir?</button>
+      <button class="game-btn" @click="mostrarCampos(4, 'mover')">Mover</button>
+      <button class="game-btn" @click="mostrarCampos(8, 'ruta')">Ruta</button>
+      <button class="game-btn" @click="enviarSinParametros('lugar_visitados')">Lugares visitados</button>
+      <button class="game-btn" @click="enviarSinParametros('como_gano')">¿Cómo gano?</button>
+      <button class="game-btn" @click="enviarSinParametros('verifica_gane')">Verifica gane</button>
+    </div>
   </div>
 </template>
 
 <style scoped>
-
+/* Layout containers */
+.adventure-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2.5em 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.adventure-title {
+  text-align: center;
+  font-size: 2.5em;
+  font-weight: 700;
+  color: #181f2a;
+  margin-bottom: 1.2em;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 8px rgba(76, 175, 255, 0.12);
+}
+.log-box {
+  background: #181f2a;
+  color: #eaf1fb;
+  border-radius: 12px;
+  padding: 1.5em 1.2em;
+  font-family: 'Fira Mono', 'Consolas', monospace;
+  font-size: 1.08em;
+  min-height: 180px;
+  max-height: 350px;
+  width: 100%;
+  max-width: 600px;
+  box-shadow: 0 2px 8px rgba(24, 31, 42, 0.12);
+  margin-bottom: 1.2em;
+  white-space: pre-wrap;
+  word-break: break-word;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow-y: auto;
+  align-items: flex-start;
+}
+.input-area {
+  width: 100%;
+  max-width: 600px;
+  border-radius: 8px;
+  padding: 0 0 0.5em 0;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.input-form-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.7em;
+  margin-bottom: 0.7em;
+  width: 100%;
+  justify-content: center;
+}
+.game-input {
+  padding: 0.7em 1.1em;
+  border: 1px solid #b3c6e0;
+  border-radius: 8px;
+  font-size: 1.08em;
+  width: 230px;
+  box-sizing: border-box;
+  height: 48px;
+}
+.input-btn {
+  height: 48px;
+  margin: 0;
+  background: #181f2a !important;
+  color: #eaf1fb !important;
+}
+.botones-grid {
+  width: 100%;
+  max-width: 600px;
+  border-radius: 8px;
+  padding: 0;
+  margin-bottom: 2em;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1em;
+}
+.game-btn {
+  background: #181f2a;
+  color: #eaf1fb;
+  border: none;
+  border-radius: 8px;
+  padding: 0.7em 1.4em;
+  font-weight: 600;
+  font-size: 1.08em;
+  box-shadow: 0 2px 8px rgba(24, 31, 42, 0.15);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  margin-bottom: 0.2em;
+  width: 170px;
+  min-height: 60px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.game-btn {
+  background: #181f2a;
+  color: #eaf1fb;
+  border: none;
+  border-radius: 8px;
+  padding: 0.7em 1.4em;
+  font-weight: 600;
+  font-size: 1.08em;
+  box-shadow: 0 2px 8px rgba(24, 31, 42, 0.15);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  margin-bottom: 0.2em;
+  width: 170px;
+  min-height: 60px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.game-btn:disabled {
+  background: #b3c6e0 !important;
+  color: #fff !important;
+  cursor: not-allowed;
+}
+.game-btn:hover:not(:disabled) {
+  background: #222a35 !important;
+  transform: translateY(-2px);
+}
+.log-loading {
+  color: #ffe066;
+}
+.log-error {
+  color: #ff6b6b;
+}
+.log-result {
+  color: #eaf1fb;
+}
 </style>
