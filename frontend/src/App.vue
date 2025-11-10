@@ -177,6 +177,15 @@ async function formarQuery() {
   if (query2.value) parametros.push(query2.value.toLowerCase());
   if (pred.value === "donde_esta" || pred.value === "ruta") parametros.push("X");
 
+  const requiereParams = ["tomar", "usar", "mover", "puedo_ir", "donde_esta", "ruta"];
+  if (requiereParams.includes(pred.value)) {
+    const paramsSinX = parametros.filter(p => p !== "X");
+    if (paramsSinX.length === 0 || paramsSinX.every(p => !p || p.trim() === "")) {
+      error.value = "Debes completar los campos antes de consultar.";
+      return;
+    }
+  }
+
   const data = await enviarPredicado(pred.value, parametros);
   if (data) {
     const mensaje = mostrarResultados(pred.value, data);
@@ -184,7 +193,7 @@ async function formarQuery() {
     saveResults();
     scrollToBottom();
 
-    if (['mover', 'tomar', 'usar'].includes(pred.value)) {
+    if (["mover", "tomar", "usar"].includes(pred.value)) {
       await actualizarLugares();
       await actualizarObjetosUsados();
     }
@@ -204,7 +213,7 @@ function formarComoGano(lista) {
   let resultado = "\n";
   lista.forEach((r, i) => {
     const [lugarFinal, objeto, camino] = r;
-    resultado += `${i + 1}. Llegar a ${lugarFinal} con ${objeto} e ir por: ${camino.join(" -> ")}\n`;
+    resultado += ${i + 1}. Llegar a ${lugarFinal} con ${objeto} e ir por: ${camino.join(" -> ")}\n;
   });
   return resultado;
 }
@@ -440,22 +449,68 @@ async function enviarSinParametros(value) {
 </template>
 
 <style scoped>
+.page-bg {
+  min-height: 100vh;
+  padding: 2rem 0;
+  background: radial-gradient(circle at top, #6b4423 0, #2b1a0f 45%, #140b06 100%);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
 .container {
   max-width: 1400px;
+  width: 95%;
   margin: 0 auto;
   padding: 2rem;
-  font-family: 'Fira Mono', 'Consolas', monospace;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  background: #f1e2c4;
+  border-radius: 18px;
+  border: 4px solid #c59b52;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  position: relative;
+  overflow: hidden;
+}
+.container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 10% 0%, rgba(0, 0, 0, 0.08), transparent 60%),
+    radial-gradient(circle at 90% 100%, rgba(0, 0, 0, 0.12), transparent 60%);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.header {
+  position: relative;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.header-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top, rgba(255, 215, 128, 0.4), transparent 60%);
+  z-index: 0;
 }
 .title {
-  text-align: center;
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #181f2a;
-  margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: #3a1b0a;
+  margin-bottom: 0.5rem;
   letter-spacing: 2px;
-  text-shadow: 0 2px 8px rgba(76, 175, 255, 0.12);
+  text-shadow: 0 2px 4px rgba(80, 40, 10, 0.4);
+}
+.subtitle {
+  position: relative;
+  z-index: 1;
+  color: #6a4120;
+  font-size: 1rem;
+  font-style: italic;
 }
 .main-layout {
+  position: relative;
+  z-index: 1;
   display: flex;
   gap: 1.5rem;
   align-items: flex-start;
@@ -467,35 +522,61 @@ async function enviarSinParametros(value) {
   gap: 1rem;
 }
 .side-log {
-  background: #181f2a;
-  border-radius: 12px;
+  background: linear-gradient(145deg, #3f2614, #2a170d);
+  border-radius: 14px;
   padding: 1rem;
-  box-shadow: 0 2px 8px rgba(24, 31, 42, 0.12);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
   max-height: 290px;
   display: flex;
   flex-direction: column;
+  border: 2px solid #c59b52;
+}
+.side-log-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 221, 157, 0.3);
+  padding-bottom: 0.4rem;
+}
+.side-log-icon {
+  font-size: 1.2rem;
 }
 .side-log-title {
-  color: #eaf1fb;
+  color: #ffe4b8;
   font-size: 0.95rem;
-  margin: 0 0 0.75rem 0;
-  border-bottom: 2px solid #2a3441;
-  padding-bottom: 0.4rem;
+  margin: 0;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 .side-log-content {
-  color: #eaf1fb;
+  color: #fce5c8;
   font-size: 0.9rem;
   overflow-y: auto;
   flex: 1;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.side-log-content::-webkit-scrollbar {
+  display: none;
+}
+
 .log-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   padding: 0.4rem 0.5rem;
-  margin-bottom: 0.4rem;
-  background: #222a35;
-  border-radius: 6px;
-  border-left: 3px solid #4cafff;
+  margin-bottom: 0.35rem;
+  background: rgba(8, 5, 3, 0.4);
+  border-radius: 8px;
+  border-left: 3px solid #f6c453;
+}
+.log-index {
+  font-weight: 700;
+  color: #fcd38b;
+}
+.log-text {
+  flex: 1;
 }
 .center-column {
   flex: 1;
@@ -503,30 +584,64 @@ async function enviarSinParametros(value) {
   flex-direction: column;
   gap: 1.5rem;
 }
-.log-box {
-  background: #181f2a;
-  color: #eaf1fb;
-  border-radius: 12px;
-  padding: 1.5rem;
-  font-size: 1rem;
-  min-height: 300px;
-  max-height: 400px;
-  box-shadow: 0 2px 8px rgba(24, 31, 42, 0.12);
-  overflow-y: auto;
+.log-section {
+  background: #f7ebcf;
+  border-radius: 16px;
+  padding: 1.2rem 1.4rem 1.4rem;
+  border: 2px solid #d1a457;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
 }
+.log-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+.scroll-icon {
+  font-size: 1.8rem;
+}
+.log-title {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #3a1b0a;
+  font-weight: 700;
+}
+.log-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #7b5530;
+}
+.log-box {
+  background: #261308;
+  color: #ffe7c2;
+  border-radius: 12px;
+  padding: 1.1rem 1.2rem;
+  font-size: 0.96rem;
+  min-height: 260px;
+  max-height: 360px;
+  box-shadow: inset 0 0 0 1px rgba(255, 225, 177, 0.3);
+  overflow-y: auto;
+  position: relative;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.log-box::-webkit-scrollbar {
+  display: none;
+}
+
 .loading-text {
   color: #ffe066;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
 }
 .error-text {
-  color: #ff6b6b;
-  font-size: 1.1rem;
+  color: #ff9b8b;
+  font-size: 1.05rem;
 }
 .empty-state {
-  color: #8a96a3;
+  color: #c9a27b;
   font-style: italic;
   text-align: center;
-  padding: 2rem;
+  padding: 2rem 1rem;
 }
 .result-item {
   margin-bottom: 1rem;
@@ -534,27 +649,27 @@ async function enviarSinParametros(value) {
 .result-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.88rem;
 }
 .result-command {
-  color: #4cafff;
-  font-weight: bold;
+  color: #f6c453;
+  font-weight: 700;
 }
 .result-time {
-  color: #8a96a3;
-  font-size: 0.85rem;
+  color: #c19b78;
 }
 .result-message {
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
-  color: #eaf1fb;
-  font-size: 0.95rem;
+  color: #ffe9c7;
+  font-size: 0.93rem;
 }
 .separator {
   height: 1px;
-  background: #2a3441;
-  margin: 1rem 0;
+  background: rgba(206, 153, 88, 0.4);
+  margin: 0.8rem 0;
 }
 .input-area {
   min-height: 60px;
@@ -564,31 +679,43 @@ async function enviarSinParametros(value) {
   gap: 0.7rem;
   align-items: center;
   flex-wrap: wrap;
+  margin-top: 0.3rem;
 }
 .input {
   padding: 0.7rem 1.1rem;
-  border: 1px solid #b3c6e0;
-  border-radius: 8px;
-  font-size: 1rem;
+  border: 1px solid #d1a457;
+  border-radius: 999px;
+  font-size: 0.98rem;
   flex: 1;
-  min-width: 180px;
+  min-width: 190px;
   max-width: 260px;
+  background: #fff6e2;
+  color: #3a1b0a;
+}
+.input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(237, 196, 114, 0.8);
 }
 .input-btn {
-  background: #181f2a;
-  color: #eaf1fb;
+  background: linear-gradient(135deg, #d49b3f, #b6741e);
+  color: #2b1608;
   border: none;
-  border-radius: 8px;
-  padding: 0.7rem 1.4rem;
-  font-weight: 600;
-  font-size: 1rem;
+  border-radius: 999px;
+  padding: 0.7rem 1.6rem;
+  font-weight: 700;
+  font-size: 0.96rem;
   cursor: pointer;
-  transition: all 0.2s;
-  min-width: 120px;
+  transition: all 0.18s ease-out;
+  min-width: 130px;
+  box-shadow: 0 4px 0 #7a4b16;
 }
 .input-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(24, 31, 42, 0.3);
+  box-shadow: 0 6px 0 #7a4b16;
+}
+.input-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 0 #7a4b16;
 }
 .buttons-wrapper {
   display: flex;
@@ -596,48 +723,70 @@ async function enviarSinParametros(value) {
   gap: 1rem;
 }
 .buttons-group {
-  background: #181f2a;
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 2px 8px rgba(24, 31, 42, 0.12);
+  background: #f7ebcf;
+  border-radius: 16px;
+  padding: 1rem 1.2rem 1.2rem;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  border: 2px solid #d1a457;
 }
 .buttons-title {
   margin: 0 0 0.75rem 0;
-  font-size: 0.9rem;
-  color: #eaf1fb;
+  font-size: 0.97rem;
+  color: #3a1b0a;
   text-transform: uppercase;
   letter-spacing: 1px;
-  opacity: 0.85;
 }
 .botones-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.7rem;
 }
 .game-btn {
-  background: #181f2a;
-  color: #eaf1fb;
-  border: 1px solid #2a3441;
-  border-radius: 8px;
-  padding: 0.9rem 1rem;
+  background: linear-gradient(135deg, #4b2915, #2f190c);
+  color: #ffe9c5;
+  border: 1px solid #f0c36b;
+  border-radius: 999px;
+  padding: 0.7rem 1rem;
   font-weight: 600;
   font-size: 0.95rem;
-  box-shadow: 0 2px 8px rgba(24, 31, 42, 0.15);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
   cursor: pointer;
-  transition: all 0.2s;
-  min-height: 52px;
+  transition: all 0.18s ease-out;
+  min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.4rem;
 }
 .game-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(24, 31, 42, 0.35);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.6);
+  filter: brightness(1.05);
 }
 .log-loading {
-  border-left: 4px solid #ffe066;
+  box-shadow: 0 0 0 2px #ffe066;
 }
 .log-error {
-  border-left: 4px solid #ff6b6b;
+  box-shadow: 0 0 0 2px #ff9b8b;
+}
+@media (max-width: 1024px) {
+  .main-layout {
+    flex-direction: column;
+  }
+  .side-column {
+    flex: 1;
+    max-width: 100%;
+  }
+}
+@media (max-width: 640px) {
+  .container {
+    padding: 1.5rem 1.1rem;
+  }
+  .title {
+    font-size: 2.1rem;
+  }
+  .botones-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
