@@ -46,7 +46,6 @@ mover(LugarDestino) :-
     objetos_requeridos(LugarDestino, ObjetosRequeridos),
     verificar_objetos_en_inventario_y_usados(ObjetosRequeridos),
     retractall(jugador(_)),
-    write("UI2 "),
     assertz(jugador(LugarDestino)),
     actualizar_camino_realizado(LugarDestino).
 
