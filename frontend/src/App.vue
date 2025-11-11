@@ -258,7 +258,7 @@ function mostrarResultados(predi, result) {
     return ruta?.length > 0 ? "La ruta: " + ruta.join(" -> ") : "No existe una ruta";
   } else if (predi === "como_gano") {
     const condiciones = result.data[0]?.X;
-    return condiciones?.length > 0 ? "Para ganar:" + formarComoGano(condiciones) : "No existe forma de ganar";
+    return condiciones?.length > 0 ? "Para ganar:" + formarComoGano(condiciones) : "No existe forma de ganar actualmente. Te faltan objetos";
   } else {
     const X = result.data[0]?.X;
     return X?.length > 0 ? "¡Has ganado!" + formarGane(X) : "No has ganado";
