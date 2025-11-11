@@ -1,5 +1,12 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue';
+import espadas from '@/assets/espadas.svg';
+import brujula from '@/assets/compass.svg'; 
+import listaObjetos from '@/assets/lista.svg'; 
+import mapa from '@/assets/mapa.svg'; 
+import mochila from '@/assets/mochila.svg'; 
+import castillo from '@/assets/castle.svg'; 
+import lupa from '@/assets/lupa.svg'; 
 
 const query = ref('');
 const query2 = ref('');
@@ -213,7 +220,8 @@ function formarComoGano(lista) {
   let resultado = "\n";
   lista.forEach((r, i) => {
     const [lugarFinal, objeto, camino] = r;
-    resultado += ${i + 1}. Llegar a ${lugarFinal} con ${objeto} e ir por: ${camino.join(" -> ")}\n;
+    // Usar plantilla literal válida y proteger el join si camino no es un array
+    resultado += `${i + 1}. Llegar a ${lugarFinal} con ${objeto} e ir por: ${Array.isArray(camino) ? camino.join(" -> ") : camino}\n`;
   });
   return resultado;
 }
@@ -271,12 +279,22 @@ async function enviarSinParametros(value) {
 
 <template>
   <div class="container">
-    <h1 class="title">Bienvenido a Adventure</h1>
+    <h1 class="title">
+      <img class="title-icon" :src="espadas" alt="Inicio del título" />
+      Aventura del tesoro perdido
+      <img class="title-icon" :src="espadas" alt="Final del título" />
+    </h1>
+    <p class="subtitle">
+      Explora antiguos lugares, usa tus artefactos y descifra el camino hacia el tesoro.
+    </p>    
 
     <div class="main-layout">
       <div class="side-column">
         <div class="side-log">
-          <h3 class="side-log-title">Lugares Visitados</h3>
+          <h3 class="side-log-title">
+            <img class="side-log-icon" :src="brujula" alt="" />
+            Lugares Visitados
+          </h3>
           <div class="side-log-content">
             <div v-if="lugares.length === 0" class="empty-state">
               No has visitado ningún lugar
@@ -290,7 +308,10 @@ async function enviarSinParametros(value) {
         </div>
 
         <div class="side-log">
-          <h3 class="side-log-title">Objetos Usados</h3>
+          <h3 class="side-log-title">
+            <img class="side-log-icon" :src="listaObjetos" alt="" />
+            Objetos Usados
+          </h3>
           <div class="side-log-content">
             <div v-if="objetosUsados.length === 0" class="empty-state">
               No has usado ningún objeto
@@ -388,7 +409,10 @@ async function enviarSinParametros(value) {
 
         <div class="buttons-wrapper">
           <div class="buttons-group">
-            <h3 class="buttons-title">Acciones</h3>
+            <h3 class="buttons-title">
+              <img class="buttons-icon" :src="castillo" alt="" />
+              Acciones
+            </h3>
             <div class="botones-grid">
               <button @click="mostrarCampos(1, 'tomar')" class="game-btn">Tomar objeto</button>
               <button @click="mostrarCampos(2, 'usar')" class="game-btn">Usar objeto</button>
@@ -397,7 +421,10 @@ async function enviarSinParametros(value) {
           </div>
 
           <div class="buttons-group">
-            <h3 class="buttons-title">Consultas</h3>
+            <h3 class="buttons-title">
+              <img class="buttons-icon" :src="lupa" alt="" />
+              Consultas
+            </h3>
             <div class="botones-grid">
               <button @click="enviarSinParametros('que_tengo')" class="game-btn">Inventario</button>
               <button @click="mostrarCampos(5, 'donde_esta')" class="game-btn">¿Dónde está?</button>
@@ -417,7 +444,10 @@ async function enviarSinParametros(value) {
 
       <div class="side-column">
         <div class="side-log">
-          <h3 class="side-log-title">Todos los Lugares</h3>
+          <h3 class="side-log-title">
+            <img class="side-log-icon" :src="mapa" alt="" />
+            Todos los lugares
+          </h3>
           <div class="side-log-content">
             <div v-if="todosLugares.length === 0" class="empty-state">
               No hay lugares definidos
@@ -431,7 +461,10 @@ async function enviarSinParametros(value) {
         </div>
 
         <div class="side-log">
-          <h3 class="side-log-title">Todos los Objetos</h3>
+          <h3 class="side-log-title">
+            <img class="side-log-icon" :src="mochila" alt="" />
+            Todos los objetos
+          </h3>
           <div class="side-log-content">
             <div v-if="todosObjetos.length === 0" class="empty-state">
               No hay objetos definidos
@@ -491,22 +524,70 @@ async function enviarSinParametros(value) {
   background: radial-gradient(circle at top, rgba(255, 215, 128, 0.4), transparent 60%);
   z-index: 0;
 }
+
 .title {
-  position: relative;
-  z-index: 1;
-  font-size: 2.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  text-align: center;
+  font-size: 2.4rem;
   font-weight: 800;
   color: #3a1b0a;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
   letter-spacing: 2px;
   text-shadow: 0 2px 4px rgba(80, 40, 10, 0.4);
 }
+
+.title-icon {
+  width: 55px;  
+  height: 55px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.15));
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.title-icon:hover {
+  transform: scale(1.1) rotate(8deg);
+  filter: drop-shadow(0 0 6px rgba(255, 215, 128, 0.6));
+}
+
+.side-log-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #ffe4b8;
+  font-size: 0.95rem;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid rgba(255, 221, 157, 0.3);
+  padding-bottom: 0.4rem;
+}
+
+.side-log-icon {
+  width: 18px;   
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,.2));
+}
+
 .subtitle {
   position: relative;
   z-index: 1;
   color: #6a4120;
   font-size: 1rem;
   font-style: italic;
+
+  /* centrado */
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* buen ancho de lectura y centrado horizontal */
+  max-width: 70ch;
+  margin: 0.25rem auto 1.25rem;
 }
 .main-layout {
   position: relative;
@@ -729,13 +810,31 @@ async function enviarSinParametros(value) {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
   border: 2px solid #d1a457;
 }
+
 .buttons-title {
-  margin: 0 0 0.75rem 0;
-  font-size: 0.97rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   color: #3a1b0a;
   text-transform: uppercase;
   letter-spacing: 1px;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
 }
+
+.buttons-icon {
+  width: 20px;  
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+  transition: transform 0.25s ease;
+}
+
+.buttons-icon:hover {
+  transform: rotate(-10deg) scale(1.05);
+}
+
 .botones-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
